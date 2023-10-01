@@ -10,24 +10,38 @@ file = "#{Dir.getwd}/#{ARGV[0]}"
 server = TCPServer.new(port)
 
 def watch_file(f)
-  puts 'TRIGGER'
+  puts "#{Time.now}: Reload"
   notifier = INotify::Notifier.new
   notifier.watch(f, :modify) {sendreload}
   notifier.process
 end
 
 def sendpage()
-rc = Redcarpet::Markdown.new(Redcarpet::Render::HTML)
-md = rc.render(File.read("#{Dir.getwd}/#{ARGV[0]}"))
-html = "<!DOCTYPE html>
+  rc = Redcarpet::Markdown.new(Redcarpet::Render::HTML)
+  md = rc.render(File.read("#{Dir.getwd}/#{ARGV[0]}"))
+  gh_css = File.read("#{$0.split("/")[0...-1].join("/")}/github-markdown-dark_5.2.0_min.css")
+  html = "<!DOCTYPE html>
 <html>
   <head>
+    <title>#{ARGV[0]}</title>
     <link href='data:image/x-icon' rel='icon' />
+    <style>
+      body { background-color: black; }
+      .markdown-body {
+        box-sizing: border-box;
+        min-width: 200px;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 45px;
+      }
+      @media (max-width: 767px) {
+        .markdown-body { padding: 15px; }
+      }
+      #{gh_css}
+    </style>
   </head>
   <body>
-    <!-- MARKDOWN BEGIN -->
-    #{md}
-    <!-- MARKDOWN END -->
+    <article class='markdown-body'>#{md}</article>
     <script>
       const socket = new WebSocket('ws://localhost:8000');
       socket.addEventListener('message', e => {window.location.reload();});
@@ -35,10 +49,10 @@ html = "<!DOCTYPE html>
   </body>
 </html>
 "
-    $session.print("HTTP/1.1 200\r\n")
-    $session.print("Content-Type: text/html\r\n")
-    $session.print("\r\n")
-    $session.print(html)
+  $session.print("HTTP/1.1 200\r\n")
+  $session.print("Content-Type: text/html\r\n")
+  $session.print("\r\n")
+  $session.print(html)
 end
 
 def sendreload()
@@ -64,7 +78,6 @@ end
 puts("#{Time.now}: Watching for modifications to #{file}")
 puts("#{Time.now}: Starting server on port #{port}")
 while $session = server.accept()
-
   http_request = ""
   while (line = $session.gets) && (line != "\r\n")
     http_request += line
