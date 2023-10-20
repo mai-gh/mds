@@ -17,7 +17,14 @@ def watch_file(f)
 end
 
 def sendpage()
-  rc = Redcarpet::Markdown.new(Redcarpet::Render::HTML)
+    # https://george-hawkins.github.io/basic-gfm-jekyll/redcarpet-extensions.html
+  rc = Redcarpet::Markdown.new(
+    Redcarpet::Render::HTML,
+    tables: true,
+    fenced_code_blocks: true,
+    strikethrough: true,
+    with_toc_data: true,
+  )
   md = rc.render(File.read("#{Dir.getwd}/#{ARGV[0]}"))
   gh_css = File.read("#{$0.split("/")[0...-1].join("/")}/github-markdown-dark_5.2.0_min.css")
   html = "<!DOCTYPE html>
@@ -31,8 +38,8 @@ def sendpage()
         box-sizing: border-box;
         min-width: 200px;
         max-width: 980px;
-        margin: 0 auto;
         padding: 45px;
+        margin: 0 auto !important;
       }
       @media (max-width: 767px) {
         .markdown-body { padding: 15px; }
