@@ -7,6 +7,7 @@ require 'rb-inotify'
 
 port = 8000
 file = "#{Dir.getwd}/#{ARGV[0]}"
+work_dir = file.split("/")[0...-1].join("/")+"/"
 server = TCPServer.new(port)
 
 def watch_file(f)
@@ -17,7 +18,6 @@ def watch_file(f)
 end
 
 def sendpage()
-    # https://george-hawkins.github.io/basic-gfm-jekyll/redcarpet-extensions.html
   rc = Redcarpet::Markdown.new(
     Redcarpet::Render::HTML,
     tables: true,
@@ -89,12 +89,23 @@ while $session = server.accept()
   while (line = $session.gets) && (line != "\r\n")
     http_request += line
   end
+
   #STDERR.puts http_request
 
   if (matches = http_request.match(/^Sec-WebSocket-Key: (\S+)/))
     handshake matches[1]
     Thread.new { watch_file file }
-  else
+  elsif (http_request.split(/\r\n/)[0] == "GET / HTTP/1.1")
     sendpage
+  else
+    fp = work_dir + http_request.split(/\r\n/)[0].split(" ")[1].gsub(/\//, "")
+    ext = fp.split(".")[-1]
+    if (File.file?(fp))
+      s = File.open(fp, 'rb') { |io| io.read }
+      $session.print("HTTP/1.1 200\r\n")
+      $session.print("Content-Type: image/#{ext}\r\n")
+      $session.print("\r\n")
+      $session.write(s)
+    end      
   end
 end
