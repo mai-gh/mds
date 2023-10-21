@@ -108,6 +108,7 @@ end
 
 puts("#{Time.now}: Watching for modifications to #{file}")
 puts("#{Time.now}: Starting server on port #{port}")
+fork { exec "surf http://127.0.0.1:#{port}" }
 while $session = server.accept()
   http_request = ""
   while (line = $session.gets) && (line != "\r\n")
