@@ -58,16 +58,6 @@ def sendpage()
   </body>
 </html>
 "
-  thtml = "<!DOCTYPE html>
-<html>
-  <head>
-  </head>
-  <body>
-    <div>HHHHHHHHHHHHH</div>
-    <img src=example.jpg></img>
-  </body>
-</html>
-"
   $session.print("HTTP/1.1 200\r\n")
   $session.print("Content-Type: text/html\r\n")
   $session.print("\r\n")
